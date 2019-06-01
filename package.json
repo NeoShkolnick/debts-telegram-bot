@@ -1,0 +1,25 @@
+{
+  "name": "telegram-debts-bot",
+  "version": "0.0.1",
+  "description": "Telegram bot, that help you monitoring debts",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NeoShkolnick/debts-telegram-bot.git"
+  },
+  "author": "Nikolay",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NeoShkolnick/debts-telegram-bot/issues"
+  },
+  "homepage": "https://github.com/NeoShkolnick/debts-telegram-bot#readme",
+  "dependencies": {
+    "telegraf": "^3.29.0"
+  },
+  "devDependencies": {
+    "socks5-https-client": "^1.2.1"
+  }
+}
