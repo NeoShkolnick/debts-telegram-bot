@@ -4,6 +4,7 @@ const Stage = require('telegraf/stage');
 
 const { enter, leave } = Stage;
 
+const mongoose = require('mongoose');
 const SocksAgent = require('socks5-https-client/lib/Agent');
 
 const config = require('./config');
@@ -16,14 +17,25 @@ const socksAgent = new SocksAgent({
   socksPort: `9150`,
 });
 
-const bot = new Telegraf(config.BOT_TOKEN, {
-  telegram: { agent: socksAgent }
+
+mongoose.connect(`mongodb+srv://${config.MONGODB_USER}:${config.MONGODB_PASSWORD}@bdfortelegrambot-ftbxu.azure.mongodb.net/test?retryWrites=true&w=majority`, {
+  useNewUrlParser: true,
+  useCreateIndex: true
 });
 
+mongoose.connection.on('error', err => {
+  console.error(`Error occured during an attempt to establish connection with the database: %O`, err);
+  process.exit(1);
+});
 
-const stage = new Stage([mainScene, giveScene, getScene]);
-bot.use(session());
-bot.use(stage.middleware());
-bot.command('start', enter('main'));
+mongoose.connection.on('open', () => {
+  const bot = new Telegraf(config.BOT_TOKEN, {
+    telegram: { agent: socksAgent }
+  });
+  const stage = new Stage([mainScene, giveScene, getScene]);
+  bot.use(session());
+  bot.use(stage.middleware());
+  bot.command('start', enter('main'));
 
-bot.launch();
+  bot.launch();
+});
