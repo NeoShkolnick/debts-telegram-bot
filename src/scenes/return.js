@@ -30,19 +30,16 @@ const stepDebts = new Composer();
 stepDebts.hears('Назад', (ctx) => {
   return ctx.scene.enter('main');
 });
-stepDebts.on('text', ctx => {
+stepDebts.on('text', async ctx => {
   const keyboard = getDebtsKeyboard(ctx.session.contacts, ctx.session.isUserDebtor);
   if (keyboard.reply_markup.keyboard.flat().includes(ctx.message.text)) {
     const msg = ctx.message.text.split('|');
-    Contact.findOne({ user: ctx.session.user._id, name: msg[0] }, function (err, contact) {
-      Debt.findOne({ contact: contact._id, value: Number(msg[1]),
-        isContactDebtor: !ctx.session.isUserDebtor, comment: msg[2]}, function (err, debt) {
-        ctx.session.debt = debt;
-        ctx.replyWithMarkdown('Долг возращён полностью? Если частично введите сумму.', getDebtKeyboard());
-        return ctx.wizard.next();
-      });
-    });
-    return ctx.reply('Выбран долг!');
+    const contact = await Contact.findOne({ user: ctx.session.user._id, name: msg[0] });
+    const debt = await Debt.findOne({ contact: contact._id, value: Number(msg[1]),
+      isContactDebtor: !ctx.session.isUserDebtor, comment: msg[2] });
+    ctx.session.debt = debt;
+    await ctx.replyWithMarkdown('Долг возращён полностью? Если частично введите сумму', getDebtKeyboard());
+    return ctx.wizard.next();
   }
   return ctx.reply('Такого долга не существует');
 });
@@ -51,51 +48,48 @@ const stepDebt = new Composer();
 stepDebt.hears('Назад', (ctx) => {
   return ctx.scene.enter('return');
 });
-stepDebt.hears('Да, долг возращён полностью', ctx => {
+stepDebt.hears('Да, долг возращён полностью', async ctx => {
   const debt = ctx.session.debt;
-  Contact.findOne({ _id: debt.contact }, function (err, contact) {
-    contact.debts.pull(debt._id);
-    contact.save();
-    Debt.deleteOne({ _id: debt._id });
-    ctx.reply('Долг удалён');
-  });
+  const contact = await Contact.findOne({ _id: debt.contact });
+  contact.debts.pull(debt._id);
+  await contact.save();
+  await Debt.deleteOne({ _id: debt._id });
+  await ctx.reply('Долг удалён');
   return ctx.scene.enter('main');
 });
-stepDebt.on('text', ctx => {
+stepDebt.on('text', async ctx => {
   const debt = ctx.session.debt;
   const newValue = parseInt(ctx.message.text);
   if (!newValue) {
     return ctx.replyWithMarkdown('Введите коррекное число', getDebtKeyboard());
   }
   if (newValue > debt.value) {
-    return ctx.replyWithMarkdown(`Число больше ${debt.value}`, getDebtKeyboard());
+    return ctx.replyWithMarkdown(`Число больше чем ${debt.value}`, getDebtKeyboard());
   }
   debt.value -= newValue;
-  debt.save();
-  ctx.reply('Долг обновлён');
+  await debt.save();
+  await ctx.reply('Долг успешно обновлён');
   return ctx.scene.enter('main');
 });
 
 const returnScene = new WizardScene('return',
-  (ctx) => {
-    User.findOne({ chat_id: ctx.from.id }, function (err, user) {
-      ctx.session.user = user;
-      Contact.find({ user: user._id }).populate('debts').exec(function (err, contacts) {
-        ctx.session.contacts = contacts;
-        const numOfDebts = contacts.reduce((acc, contact) => acc + contact.debts.length, 0);
-        if (numOfDebts) {
-          const keyboard = getDebtsKeyboard(ctx.session.contacts, ctx.session.isUserDebtor);
-          ctx.replyWithMarkdown(`Какой долг ${ctx.session.isUserDebtor ? 'вы' : 'вам'} вернули?`, keyboard);
-          return ctx.wizard.next();
-        }
-        ctx.reply('Долги отсутствуют');
-        return ctx.scene.enter('main');
-      });
-    });
+  async ctx => {
+    const user = await User.findOne({ chat_id: ctx.from.id });
+    ctx.session.user = user;
+    const contacts = await Contact.find({ user: user._id }).populate('debts');
+    ctx.session.contacts = contacts;
+    const numOfDebts = contacts.reduce((acc, contact) => acc + contact.debts.length, 0);
+    if (numOfDebts) {
+      const keyboard = getDebtsKeyboard(ctx.session.contacts, ctx.session.isUserDebtor);
+      await ctx.replyWithMarkdown(`Какой долг ${ctx.session.isUserDebtor ? 'вы' : 'вам'} вернули?`, keyboard);
+      return ctx.wizard.next();
+    }
+    await ctx.reply('Долги отсутствуют');
+    return ctx.scene.enter('main');
   },
   stepDebts,
   stepDebt
 );
-
+returnScene.command('start', ctx => ctx.scene.enter('main'));
 
 module.exports = returnScene;
