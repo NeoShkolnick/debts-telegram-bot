@@ -2,9 +2,9 @@
   "name": "telegram-debts-bot",
   "version": "0.0.1",
   "description": "Telegram bot, that help you monitoring debts",
-  "main": "bot.js",
+  "main": "src/bot.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/bot.js"
   },
   "repository": {
     "type": "git",
