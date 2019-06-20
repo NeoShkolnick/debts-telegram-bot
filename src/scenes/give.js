@@ -11,7 +11,7 @@ const Debt = require('../models/debt');
 
 const getContactKeyboard = contacts => {
   return Markup.keyboard(
-    [...contacts.map(contact => contact.name), 'Добавить']
+    [...contacts.map(contact => contact.name), 'Добавить', 'В меню']
   ).oneTime().resize().extra();
 };
 
@@ -30,12 +30,12 @@ stepContact.on('text', async ctx => {
     await newContact.save();
     ctx.session.contact = newContact;
     ctx.session.isNewContact = false;
-    await ctx.reply('Сумма долга?', Markup.removeKeyboard().extra());
+    await ctx.reply('Сумма долга?', Markup.keyboard(['В меню']).resize().extra());
     return ctx.wizard.next();
   }
   if (contact) {
     ctx.session.contact = contact;
-    await ctx.reply('Сумма долга?', Markup.removeKeyboard().extra());
+    await ctx.reply('Сумма долга?', Markup.keyboard(['В меню']).resize().extra());
     return ctx.wizard.next();
   } else {
     await ctx.replyWithMarkdown('Данный контакт не существует', getContactKeyboard(ctx.session.contacts));
@@ -79,5 +79,6 @@ const giveScene = new WizardScene('give',
   }
 );
 giveScene.command('start', ctx => ctx.scene.enter('main'));
+giveScene.hears('В меню', ctx => ctx.scene.enter('main'));
 
 module.exports = giveScene;
