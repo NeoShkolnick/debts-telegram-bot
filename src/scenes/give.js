@@ -66,8 +66,8 @@ const giveScene = new WizardScene('give',
     return ctx.wizard.next();
   },
   async ctx => {
-    if (ctx.message.text.indexOf('|') === -1) {
-      return ctx.reply('Комментарий не сожет содержать |');
+    if (ctx.message.text.indexOf('|') !== -1) {
+      return ctx.reply('Комментарий не может содержать |');
     }
     ctx.session.debt.comment = ctx.message.text;
     const newDebt = new Debt(ctx.session.debt);
