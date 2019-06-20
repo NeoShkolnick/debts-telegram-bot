@@ -27,5 +27,10 @@ mongoose.connection.on('open', () => {
   bot.use(stage.middleware());
   bot.start(asyncWrapper(async ctx => ctx.scene.enter('main')));
 
-  bot.launch();
+  bot.launch({
+    webhook: {
+      domain: process.env.HEROKU,
+      port: process.env.PORT || 5000
+    }
+  });
 });
