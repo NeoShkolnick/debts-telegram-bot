@@ -78,7 +78,9 @@ const returnScene = new WizardScene('return',
     ctx.session.user = user;
     const contacts = await Contact.find({ user: user._id }).populate('debts');
     ctx.session.contacts = contacts;
-    const numOfDebts = contacts.reduce((acc, contact) => acc + contact.debts.length, 0);
+    const numOfDebts = contacts.reduce((acc, contact) => {
+      return acc + contact.debts.filter(debt => debt.isContactDebtor !== ctx.session.isUserDebtor).length;
+    }, 0);
     if (numOfDebts) {
       const keyboard = getDebtsKeyboard(ctx.session.contacts, ctx.session.isUserDebtor);
       await ctx.replyWithMarkdown(`Какой долг ${ctx.session.isUserDebtor ? 'вы' : 'вам'} вернули?`, keyboard);

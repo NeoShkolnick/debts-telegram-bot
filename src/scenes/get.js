@@ -55,7 +55,7 @@ async ctx => {
 stepContact,
 async ctx => {
   const value = parseInt(ctx.message.text);
-  if (!value) {
+  if (!value || value <= 0) {
     return ctx.reply('Введите корректное число');
   }
   ctx.session.debt = {
