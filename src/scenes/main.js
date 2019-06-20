@@ -26,7 +26,7 @@ mainScene.enter(async (ctx) => {
   await ctx.replyWithMarkdown('Выберите действие', mainKeyboard);
 });
 mainScene.hears('Взять', async ctx => await ctx.scene.enter('get'));
-mainScene.hears('Дать', async ctx => await ctx.scene.enterenter('give'));
+mainScene.hears('Дать', async ctx => await ctx.scene.enter('give'));
 mainScene.hears('Вернуть', async ctx => {
   ctx.session.isUserDebtor = true;
   await ctx.scene.enter('return');
